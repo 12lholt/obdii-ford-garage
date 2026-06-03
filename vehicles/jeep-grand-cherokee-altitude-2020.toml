@@ -1,0 +1,23 @@
+# Vehicle profile: 2020 Jeep Grand Cherokee Altitude
+#
+# Specs (for reference -- only the fields below are read by the loader):
+#   Engine:       3.6L Pentastar V6 (295 hp / 260 lb-ft)
+#   Transmission: 8-speed automatic (850RE)
+#   Drivetrain:   RWD (4x2) or 4WD (4x4)
+#   The Altitude is an appearance package based on the Laredo E.
+#
+# Run with:  garage snapshot --vehicle jeep-grand-cherokee-altitude-2020
+name = "2020 Jeep Grand Cherokee Altitude"
+
+[connection]
+# WiFi ELM327 dongle. For Bluetooth/USB use e.g. "/dev/ttyUSB0", or "" for auto.
+# Tip: keep the real dongle address out of git by setting OBD_CONNECTION_URL in
+# your .env instead of committing it here.
+url = "socket://192.168.0.10:35000"
+connect_timeout = 30
+query_retries = 2   # retry empty/null queries (slow-car workaround)
+retry_wait = 5      # seconds between retries
+check_voltage = true
+
+[polling]
+poll_interval = 5   # seconds between snapshots in `garage log`
