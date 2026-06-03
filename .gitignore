@@ -216,3 +216,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# --- obdii-ford-garage project-specific ---
+# Captured OBD snapshots (data, can be large; upload to Azure instead)
+obd_snapshots/
+# Personal, per-developer Claude Code settings (shared settings.json IS committed)
+.claude/settings.local.json

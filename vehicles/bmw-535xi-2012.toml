@@ -1,0 +1,16 @@
+# Vehicle profile: 2012 BMW 535xi
+# This replaces the constants that were hard-coded in the original scripts.
+name = "2012 BMW 535xi"
+
+[connection]
+# WiFi ELM327 dongle. For Bluetooth/USB use e.g. "/dev/ttyUSB0", or "" for auto.
+# Tip: keep the real dongle address out of git by setting OBD_CONNECTION_URL in
+# your .env instead of committing it here.
+url = "socket://192.168.0.10:35000"
+connect_timeout = 30
+query_retries = 2   # retry empty/null queries (slow-car workaround)
+retry_wait = 5      # seconds between retries -- forums report ~5s rescues slow cars
+check_voltage = true
+
+[polling]
+poll_interval = 5   # seconds between snapshots in `garage log`
