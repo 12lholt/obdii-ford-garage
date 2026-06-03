@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>uv vs pip — the practical flow</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #171a21; --panel2: #1d212b; --ink: #e7e9ee;
+    --muted: #9aa3b2; --line: #2a2f3a; --pip: #f0a24b; --uv: #6ee7a8;
+    --accent: #7aa2f7; --code: #cdd6f4;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    padding: 40px 20px;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; }
+  h1 { font-size: 30px; margin: 0 0 6px; letter-spacing: -.5px; }
+  h2 { font-size: 20px; margin: 40px 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+  .sub { color: var(--muted); margin: 0 0 8px; }
+  code, kbd { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; }
+  .lead { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px 22px; }
+  .lead b { color: var(--uv); }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .card h3 { margin: 0; padding: 12px 16px; font-size: 14px; letter-spacing: .4px; text-transform: uppercase; }
+  .card.pip h3 { background: rgba(240,162,75,.12); color: var(--pip); border-bottom: 1px solid var(--line); }
+  .card.uv h3 { background: rgba(110,231,168,.12); color: var(--uv); border-bottom: 1px solid var(--line); }
+  .card .body { padding: 14px 16px; }
+  pre {
+    margin: 0; background: var(--panel2); border: 1px solid var(--line); border-radius: 8px;
+    padding: 12px 14px; overflow-x: auto; color: var(--code); font-size: 13.5px; line-height: 1.55;
+  }
+  pre .c { color: var(--muted); }
+  pre .p { color: var(--pip); }
+  pre .u { color: var(--uv); }
+  table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: .4px; }
+  td:first-child { white-space: nowrap; }
+  td code { color: var(--pip); }
+  td code.uv { color: var(--uv); }
+  .note { color: var(--muted); font-size: 14px; }
+  .pill { display: inline-block; font-size: 12px; padding: 2px 9px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+  ol.flow { counter-reset: step; list-style: none; padding: 0; margin: 0; }
+  ol.flow li { position: relative; padding: 0 0 16px 44px; }
+  ol.flow li::before {
+    counter-increment: step; content: counter(step);
+    position: absolute; left: 0; top: 0; width: 28px; height: 28px;
+    display: grid; place-items: center; border-radius: 50%;
+    background: var(--accent); color: #0b0e14; font-weight: 700; font-size: 14px;
+  }
+  ol.flow li::after {
+    content: ""; position: absolute; left: 13px; top: 30px; bottom: 2px; width: 2px; background: var(--line);
+  }
+  ol.flow li:last-child::after { display: none; }
+  .files { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
+  .file { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; flex: 1 1 200px; }
+  .file b { color: var(--accent); }
+  .file.gen b { color: var(--uv); }
+  .tag { font-size: 11px; color: var(--muted); }
+  .key { color: var(--uv); font-weight: 600; }
+  footer { margin-top: 44px; color: var(--muted); font-size: 13px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>uv vs pip — how the flow actually works</h1>
+  <p class="sub">Grounded in your <code>obdii-ford-garage</code> project. <span class="pill">read top to bottom</span></p>
+
+  <div class="lead">
+    The big shift: with pip <b style="color:var(--pip)">you</b> manage a virtualenv, install
+    into it, and remember to write down what you installed. With uv, <b>the project file is the
+    source of truth</b> — you edit dependencies through commands, and uv keeps a hidden
+    <code>.venv</code> and an exact <code>uv.lock</code> in sync automatically. You rarely
+    "activate" anything; you just say <code class="uv">uv run …</code>.
+  </div>
+
+  <h2>The mental model</h2>
+  <div class="grid">
+    <div class="card pip">
+      <h3>pip — manual &amp; imperative</h3>
+      <div class="body">
+        <p class="note">You are the package manager. You create the venv, activate it, install,
+        and manually keep <code>requirements.txt</code> honest. Nothing records exact versions
+        unless you do it yourself.</p>
+      </div>
+    </div>
+    <div class="card uv">
+      <h3>uv — declarative &amp; automatic</h3>
+      <div class="body">
+        <p class="note">You describe <em>intent</em> ("this project needs <code>obd</code>").
+        uv resolves it, writes the exact graph to <code>uv.lock</code>, and makes the
+        <code>.venv</code> match — every time, on every machine.</p>
+      </div>
+    </div>
+  </div>
+
+  <h2>Same task, both ways</h2>
+
+  <div class="grid">
+    <div class="card pip">
+      <h3>pip: start a project</h3>
+      <div class="body"><pre><span class="c"># create + activate a venv yourself</span>
+python -m venv .venv
+source .venv/bin/activate
+<span class="c"># install, then remember to record it</span>
+<span class="p">pip install</span> obd
+<span class="p">pip freeze</span> &gt; requirements.txt</pre></div>
+    </div>
+    <div class="card uv">
+      <h3>uv: start a project</h3>
+      <div class="body"><pre><span class="c"># adds to pyproject.toml, makes .venv,</span>
+<span class="c"># writes uv.lock — all in one step</span>
+<span class="u">uv add</span> obd</pre>
+      <p class="note">No manual venv. No activate. No freeze. The <code>.venv</code> and
+      <code>uv.lock</code> are created/updated for you.</p></div>
+    </div>
+  </div>
+
+  <div class="grid" style="margin-top:16px">
+    <div class="card pip">
+      <h3>pip: clone &amp; run someone's project</h3>
+      <div class="body"><pre>python -m venv .venv
+source .venv/bin/activate
+<span class="p">pip install</span> -r requirements.txt
+<span class="c"># versions may drift from the author's</span>
+python -m obd_garage.cli --help</pre></div>
+    </div>
+    <div class="card uv">
+      <h3>uv: clone &amp; run someone's project</h3>
+      <div class="body"><pre><span class="u">uv sync</span>
+<span class="c"># exact versions from uv.lock — identical</span>
+<span class="c"># to what your collaborator has</span>
+<span class="u">uv run</span> garage --help</pre>
+      <p class="note">This is your collaborator's whole onboarding: <code class="uv">uv sync</code>,
+      then <code class="uv">uv run</code>.</p></div>
+    </div>
+  </div>
+
+  <h2>Command cheat-sheet</h2>
+  <table>
+    <tr><th>You want to…</th><th>pip</th><th>uv</th></tr>
+    <tr><td>Add a dependency</td><td><code>pip install X</code> + edit requirements</td><td><code class="uv">uv add X</code></td></tr>
+    <tr><td>Remove one</td><td><code>pip uninstall X</code> + edit requirements</td><td><code class="uv">uv remove X</code></td></tr>
+    <tr><td>Install everything for the project</td><td><code>pip install -r requirements.txt</code></td><td><code class="uv">uv sync</code></td></tr>
+    <tr><td>Run a command in the env</td><td><code>activate</code> → <code>python …</code></td><td><code class="uv">uv run …</code></td></tr>
+    <tr><td>Upgrade to newest allowed</td><td><code>pip install -U X</code> (manual)</td><td><code class="uv">uv lock --upgrade</code></td></tr>
+    <tr><td>Add an optional group</td><td>separate requirements-*.txt files</td><td><code class="uv">uv add --optional azure X</code></td></tr>
+    <tr><td>Pin exact versions for reproducibility</td><td><code>pip freeze</code> (you run it)</td><td><code class="uv">uv.lock</code> (automatic)</td></tr>
+  </table>
+
+  <h2>What uv touches for you</h2>
+  <div class="files">
+    <div class="file"><b>pyproject.toml</b><br><span class="tag">YOU + uv edit · commit it</span><br>
+      <span class="note">Your intent: "needs <code>obd&gt;=0.7.2</code>", plus the
+      <code>azure</code> / <code>diagnostics</code> extras.</span></div>
+    <div class="file gen"><b>uv.lock</b><br><span class="tag">uv writes · commit it</span><br>
+      <span class="note">The exact resolved graph (every version + hash). Guarantees
+      everyone gets the same install.</span></div>
+    <div class="file"><b>.venv/</b><br><span class="tag">uv manages · git-ignored</span><br>
+      <span class="note">The actual installed packages. Disposable — <code>uv sync</code>
+      rebuilds it from the lock.</span></div>
+  </div>
+  <p class="note" style="margin-top:12px">Rule of thumb: <span class="key">commit</span>
+  <code>pyproject.toml</code> + <code>uv.lock</code>; <span class="key">never commit</span>
+  <code>.venv/</code>. The lock is what makes "works on my machine" stop being a problem.</p>
+
+  <h2>Your project, end to end</h2>
+  <ol class="flow">
+    <li><b>Add a need:</b> <code class="uv">uv add obd</code> — it lands in <code>pyproject.toml</code>,
+        the lock updates, the venv updates. One command, three things in sync.</li>
+    <li><b>Group optional tools:</b> <code class="uv">uv add --optional diagnostics python-can cantools …</code>
+        — kept out of the core install so the at-the-car logger stays lean.</li>
+    <li><b>Keep it current:</b> <code class="uv">uv lock --upgrade</code> bumps to the newest versions
+        your constraints allow (this is how <code>python-can</code> went 3.3.4 → 4.6.1).</li>
+    <li><b>Run things:</b> <code class="uv">uv run garage snapshot -v bmw-535xi-2012</code> or
+        <code class="uv">uv run pytest</code> — uv ensures the env matches the lock <em>before</em> running.</li>
+    <li><b>Collaborator clones it:</b> <code class="uv">uv sync --extra diagnostics</code> gives them a
+        byte-for-byte identical environment. No venv setup, no version drift.</li>
+  </ol>
+
+  <div class="lead" style="margin-top:28px">
+    <b>One sentence to remember:</b> pip installs <em>packages into a venv you babysit</em>;
+    uv keeps <em>a project, its lockfile, and its venv in sync</em> so you can just
+    <code class="uv">uv add</code>, <code class="uv">uv sync</code>, and <code class="uv">uv run</code>.
+  </div>
+
+  <footer>obdii-ford-garage · uv 0.9.x · a quick orientation, not exhaustive</footer>
+</div>
+</body>
+</html>
