@@ -14,6 +14,7 @@ optional upload of captures to Azure Blob Storage. Managed with `uv`; Python
 ```bash
 uv sync                      # core deps (at-the-car logging)
 uv sync --extra azure        # also install Azure upload deps (azure-storage-blob, azure-identity)
+uv sync --extra diagnostics  # CAN/UDS/J1939/DBC library bench (catalog: docs/can-ecosystem.md)
 uv run garage --help         # CLI entry point (see subcommands below)
 uv run ruff check .          # lint
 uv run ruff format .         # format (CI runs `ruff format --check .`)
@@ -60,6 +61,19 @@ Snapshots are written to `./obd_snapshots/` (gitignored).
 - Never commit `.env`, SAS tokens, account keys, or `.claude/settings.local.json`.
   `.claude/settings.json` (shared) **is** committed; team Skills live in
   `.claude/skills/`.
+
+## Diagnostics extra
+
+The `diagnostics` optional extra is a research bench of CAN/OBD/UDS/J1939/DBC
+libraries (see `docs/can-ecosystem.md` for the catalog + PyPI-name mapping).
+Gotchas baked into `pyproject.toml`:
+- `aioisotp` is deliberately excluded — it pins `python-can ~=3.0` and would hold
+  the whole stack back. Use `can-isotp` for ISO-TP.
+- `elm327-emulator` needs a `setuptools<81` build override
+  (`[tool.uv.extra-build-dependencies]`) because it imports `pkg_resources` at
+  build time, which setuptools≥81 removed. `[tool.uv] preview = true` opts into
+  that still-preview feature.
+- `python-uds` is unmaintained and noisy on 3.13; prefer `udsoncan` for UDS work.
 
 ## Azure auth
 

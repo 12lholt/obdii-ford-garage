@@ -24,10 +24,17 @@ snapshots to Azure Blob Storage.
 ## Setup
 
 ```bash
-uv sync                 # core (at-the-car logging)
-uv sync --extra azure   # also installs the Azure upload deps
-cp .env.example .env     # then edit; .env is gitignored
+uv sync                       # core (at-the-car logging)
+uv sync --extra azure         # also installs the Azure upload deps
+uv sync --extra diagnostics   # the CAN/UDS/J1939/DBC library bench (see docs/can-ecosystem.md)
+cp .env.example .env           # then edit; .env is gitignored
 ```
+
+The `diagnostics` extra installs a broad set of CAN-bus / OBD / UDS / J1939
+libraries (python-can, cantools, can-isotp, udsoncan, scapy, opendbc,
+can-j1939, ELM327-emulator, and more). See
+[`docs/can-ecosystem.md`](docs/can-ecosystem.md) for the full catalog and the
+PyPI-name mapping.
 
 ## Vehicles are configuration, not code
 
