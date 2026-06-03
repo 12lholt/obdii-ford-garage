@@ -1,0 +1,84 @@
+[project]
+name = "obdii-ford-garage"
+version = "0.1.0"
+description = "Offline OBD-II capture + logging for a multi-make garage, with optional Azure Blob upload."
+readme = "README.md"
+requires-python = ">=3.13"
+license = { text = "MIT" }
+authors = [{ name = "12lholt" }]
+keywords = ["obd", "obd-ii", "elm327", "diagnostics", "azure"]
+
+dependencies = [
+    "obd>=0.7.2",
+]
+
+[project.optional-dependencies]
+# Azure upload is optional so the at-the-car logger has the smallest footprint.
+azure = [
+    "azure-storage-blob>=12.20",
+    "azure-identity>=1.17",
+]
+# A bench of CAN/OBD/UDS/J1939 libraries for diagnostics work. python-can is held
+# at >=4.6 deliberately: aioisotp (async ISO-TP) was dropped because it pins
+# python-can ~=3.0 and would hold the whole stack back -- can-isotp covers ISO-TP.
+diagnostics = [
+    "can-isotp>=2.0.7",
+    "can-j1939>=2.0.12",
+    "cantools>=41.4.1",
+    "elm327-emulator>=3.0.5",
+    "opendbc>=0.3.1",
+    "py-obdii>=0.10.2b0",
+    "python-can>=4.6.1",
+    "python-uds>=1.0.2",
+    "scapy>=2.7.0",
+    "udsoncan>=1.25.2",
+]
+
+[project.scripts]
+garage = "obd_garage.cli:main"
+
+[project.urls]
+Repository = "https://github.com/12lholt/obdii-ford-garage"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/obd_garage"]
+
+[tool.uv]
+# extra-build-dependencies (below) is still a preview feature; opt in so it doesn't warn.
+preview = true
+
+# ELM327-emulator 3.0.5 uses pkg_resources at build time without declaring it.
+# pkg_resources was removed from setuptools>=81, so pin an older setuptools that
+# still ships it for the build environment.
+[tool.uv.extra-build-dependencies]
+elm327-emulator = ["setuptools<81"]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.9",
+    "pytest>=8.3",
+    "pre-commit>=4.0",
+    # Pulled in so `garage upload` and its tests resolve in dev without the extra.
+    "azure-storage-blob>=12.20",
+    "azure-identity>=1.17",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+# A sensible, modern default set: pyflakes, pycodestyle, isort, pyupgrade, bugbear, comprehensions.
+select = ["E", "F", "I", "UP", "B", "C4"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["obd_garage"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

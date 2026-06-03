@@ -1,0 +1,20 @@
+# Template for adding a vehicle to the garage.
+# Copy this to e.g. vehicles/ford-f150-2018.toml and edit, then run:
+#   garage snapshot --vehicle ford-f150-2018
+name = "YEAR MAKE MODEL"
+
+[connection]
+# How to reach the dongle:
+#   WiFi ELM327:  "socket://192.168.0.10:35000"
+#   Bluetooth/USB serial:  "/dev/ttyUSB0"  (or "/dev/rfcomm0")
+#   Auto-detect:  ""   (leave empty)
+# Prefer setting OBD_CONNECTION_URL in .env over committing a real address.
+url = "socket://192.168.0.10:35000"
+connect_timeout = 30
+query_retries = 2
+retry_wait = 5
+# Set false if the car's OBD2 port misreports voltage and connection stalls.
+check_voltage = true
+
+[polling]
+poll_interval = 5
