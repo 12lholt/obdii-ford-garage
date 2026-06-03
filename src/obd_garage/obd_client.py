@@ -35,8 +35,10 @@ def unit_of(value: Any) -> str | None:
 
 def is_loggable(cmd: obd.OBDCommand) -> bool:
     """Skip the bookkeeping PIDs (PIDS_A/B/C, MIDS_*) that only report which
-    PIDs exist rather than real sensor data."""
-    return not cmd.name.startswith(("PIDS_", "MIDS_"))
+    PIDs exist rather than real sensor data, and CLEAR_DTC -- a *write* command
+    (OBD mode 04) that erases stored codes and resets emissions monitors. A
+    read-only health snapshot must never mutate vehicle state."""
+    return not cmd.name.startswith(("PIDS_", "MIDS_")) and cmd.name != "CLEAR_DTC"
 
 
 def loggable_commands(connection: obd.OBD) -> list[obd.OBDCommand]:
