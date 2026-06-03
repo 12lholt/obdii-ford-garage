@@ -62,7 +62,7 @@ Snapshots are written to `./obd_snapshots/` (gitignored).
 ## Azure upload — secretless by design
 
 Authentication uses **Microsoft Entra ID** via `DefaultAzureCredential` — there
-are **no SAS tokens or account keys** anywhere in this (public) repo.
+are **no SAS tokens or account keys** anywhere in this private repo.
 
 One-time setup:
 
